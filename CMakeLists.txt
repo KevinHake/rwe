@@ -652,6 +652,33 @@ target_include_directories(librwe PUBLIC ${PROJECT_SOURCE_DIR}/libs/imgui/backen
 add_custom_command(TARGET librwe PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/shaders" "$<TARGET_FILE_DIR:librwe>/shaders")
 
+# SPIR-V shader compilation
+find_program(GLSLC glslc)
+if(GLSLC)
+    set(GPU_SHADER_DIR "${PROJECT_SOURCE_DIR}/shaders/gpu")
+    set(GPU_SHADER_OUTPUT_DIR "${CMAKE_BINARY_DIR}/shaders/gpu")
+    file(MAKE_DIRECTORY ${GPU_SHADER_OUTPUT_DIR})
+
+    file(GLOB GPU_SHADER_SOURCES "${GPU_SHADER_DIR}/*.vert" "${GPU_SHADER_DIR}/*.frag")
+    set(SPIRV_OUTPUTS)
+    foreach(SHADER_SOURCE ${GPU_SHADER_SOURCES})
+        get_filename_component(SHADER_NAME ${SHADER_SOURCE} NAME)
+        set(SPIRV_OUTPUT "${GPU_SHADER_OUTPUT_DIR}/${SHADER_NAME}.spv")
+        add_custom_command(
+            OUTPUT ${SPIRV_OUTPUT}
+            COMMAND ${GLSLC} -o ${SPIRV_OUTPUT} ${SHADER_SOURCE}
+            DEPENDS ${SHADER_SOURCE}
+            COMMENT "Compiling SPIR-V: ${SHADER_NAME}"
+            VERBATIM
+        )
+        list(APPEND SPIRV_OUTPUTS ${SPIRV_OUTPUT})
+    endforeach()
+
+    add_custom_target(spirv_shaders DEPENDS ${SPIRV_OUTPUTS})
+else()
+    message(WARNING "glslc not found, SPIR-V shaders will not be compiled")
+endif()
+
 add_executable(rwe src/main.cpp)
 target_link_libraries(rwe librwe)
 
@@ -664,6 +691,13 @@ if(UNIX AND NOT APPLE)
 LD_LIBRARY_PATH=/usr/lib:/usr/lib64:/usr/lib/x86_64-linux-gnu:\$LD_LIBRARY_PATH exec ./rwe \"\$@\"
 ")
     file(CHMOD "${CMAKE_BINARY_DIR}/run.sh" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+endif()
+
+add_executable(sdl_gpu_test src/sdl_gpu_test.cpp)
+target_link_libraries(sdl_gpu_test SDL3::SDL3-static)
+target_include_directories(sdl_gpu_test PRIVATE ${PROJECT_SOURCE_DIR}/libs/sdl3/include)
+if(TARGET spirv_shaders)
+    add_dependencies(sdl_gpu_test spirv_shaders)
 endif()
 
 add_executable(hpi_test src/hpi_test.cpp)
