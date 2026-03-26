@@ -748,7 +748,7 @@ namespace rwe
             const auto& unitDefinition = simulation.unitDefinitions.at(unit.unitType);
             drawSelectionRect(gameMediaDatabase, viewProjectionMatrix, unit, unitDefinition, interpolationFraction, selectionRectBatch);
         }
-        worldRenderService.drawLineLoopsBatch(selectionRectBatch);
+        worldRenderService.drawLineStripsBatch(selectionRectBatch);
 
         auto seaLevel = simulation.terrain.getSeaLevel();
 

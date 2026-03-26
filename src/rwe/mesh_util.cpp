@@ -154,7 +154,8 @@ namespace rwe
             {a, color},
             {b, color},
             {c, color},
-            {d, color}};
+            {d, color},
+            {a, color}};
 
         return graphics.createColoredMesh(buffer, GL_STATIC_DRAW);
     }

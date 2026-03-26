@@ -567,10 +567,10 @@ namespace rwe
         glBindVertexArray(0);
     }
 
-    void GraphicsContext::drawLineLoop(const GlMesh& mesh)
+    void GraphicsContext::drawLineStrip(const GlMesh& mesh)
     {
         glBindVertexArray(mesh.vao.get().value);
-        glDrawArrays(GL_LINE_LOOP, 0, mesh.vertexCount);
+        glDrawArrays(GL_LINE_STRIP, 0, mesh.vertexCount);
         glBindVertexArray(0);
     }
 

@@ -246,7 +246,7 @@ namespace rwe
             graphics->drawTriangles(*s.sprite->mesh);
         }
     }
-    void RenderService::drawLineLoopsBatch(const ColoredMeshesBatch& batch)
+    void RenderService::drawLineStripsBatch(const ColoredMeshesBatch& batch)
     {
         const auto& shader = shaders->basicColor;
         graphics->bindShader(shader.handle.get());
@@ -254,7 +254,7 @@ namespace rwe
         {
             graphics->setUniformMatrix(shader.mvpMatrix, m.mvpMatrix);
             graphics->setUniformFloat(shader.alpha, 1.0f);
-            graphics->drawLineLoop(*m.mesh);
+            graphics->drawLineStrip(*m.mesh);
         }
     }
 }

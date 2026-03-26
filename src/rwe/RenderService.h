@@ -108,6 +108,6 @@ namespace rwe
 
         void drawSpriteBatch(const SpriteBatch& batch);
 
-        void drawLineLoopsBatch(const ColoredMeshesBatch& batch);
+        void drawLineStripsBatch(const ColoredMeshesBatch& batch);
     };
 }
