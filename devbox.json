@@ -23,7 +23,9 @@
     "wayland",
     "wayland-protocols",
     "libxkbcommon",
-    "libdecor"
+    "libdecor",
+    "nmap@latest",
+    "directx-shader-compiler"
   ],
   "shell": {
     "init_hook": [

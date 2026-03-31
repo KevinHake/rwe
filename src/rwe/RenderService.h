@@ -55,6 +55,15 @@ namespace rwe
         float groundHeight;
     };
 
+    // The original TA engine software-rendered 3DO models into cached bitmaps
+    // ("imposters"), keyed by unit type + orientation. Since TA uses orthographic
+    // projection, a unit at a given rotation looks the same regardless of screen
+    // position, so identical units could share one cached sprite. Rotation was
+    // snapped to discrete angles to maximize cache hits. On a modern GPU the
+    // 3DO models are so low-poly (20-100 triangles) that brute-force rendering
+    // is fine, but the imposter approach may be worth revisiting for
+    // WASM/WebGL where GPU resources are more constrained.
+    // See: http://mavorsrants.blogspot.com/2012/04/total-annihilation-graphics-engine.html
     struct UnitMeshBatch
     {
         std::vector<UnitTextureMeshRenderInfo> meshes;

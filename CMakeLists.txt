@@ -652,23 +652,39 @@ target_include_directories(librwe PUBLIC ${PROJECT_SOURCE_DIR}/libs/imgui/backen
 add_custom_command(TARGET librwe PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/shaders" "$<TARGET_FILE_DIR:librwe>/shaders")
 
-# SPIR-V shader compilation
-find_program(GLSLC glslc)
-if(GLSLC)
+# SPIR-V shader compilation from HLSL via DXC
+find_program(DXC dxc)
+if(DXC)
     set(GPU_SHADER_DIR "${PROJECT_SOURCE_DIR}/shaders/gpu")
     set(GPU_SHADER_OUTPUT_DIR "${CMAKE_BINARY_DIR}/shaders/gpu")
     file(MAKE_DIRECTORY ${GPU_SHADER_OUTPUT_DIR})
 
-    file(GLOB GPU_SHADER_SOURCES "${GPU_SHADER_DIR}/*.vert" "${GPU_SHADER_DIR}/*.frag")
     set(SPIRV_OUTPUTS)
-    foreach(SHADER_SOURCE ${GPU_SHADER_SOURCES})
+    file(GLOB GPU_VERT_SOURCES "${GPU_SHADER_DIR}/*.vert.hlsl")
+    foreach(SHADER_SOURCE ${GPU_VERT_SOURCES})
         get_filename_component(SHADER_NAME ${SHADER_SOURCE} NAME)
-        set(SPIRV_OUTPUT "${GPU_SHADER_OUTPUT_DIR}/${SHADER_NAME}.spv")
+        string(REGEX REPLACE "\\.hlsl$" ".spv" SHADER_SPV_NAME ${SHADER_NAME})
+        set(SPIRV_OUTPUT "${GPU_SHADER_OUTPUT_DIR}/${SHADER_SPV_NAME}")
         add_custom_command(
             OUTPUT ${SPIRV_OUTPUT}
-            COMMAND ${GLSLC} -o ${SPIRV_OUTPUT} ${SHADER_SOURCE}
+            COMMAND ${DXC} -spirv -T vs_6_0 -E main -Fo ${SPIRV_OUTPUT} ${SHADER_SOURCE}
             DEPENDS ${SHADER_SOURCE}
-            COMMENT "Compiling SPIR-V: ${SHADER_NAME}"
+            COMMENT "Compiling SPIR-V (vertex): ${SHADER_NAME}"
+            VERBATIM
+        )
+        list(APPEND SPIRV_OUTPUTS ${SPIRV_OUTPUT})
+    endforeach()
+
+    file(GLOB GPU_FRAG_SOURCES "${GPU_SHADER_DIR}/*.frag.hlsl")
+    foreach(SHADER_SOURCE ${GPU_FRAG_SOURCES})
+        get_filename_component(SHADER_NAME ${SHADER_SOURCE} NAME)
+        string(REGEX REPLACE "\\.hlsl$" ".spv" SHADER_SPV_NAME ${SHADER_NAME})
+        set(SPIRV_OUTPUT "${GPU_SHADER_OUTPUT_DIR}/${SHADER_SPV_NAME}")
+        add_custom_command(
+            OUTPUT ${SPIRV_OUTPUT}
+            COMMAND ${DXC} -spirv -T ps_6_0 -E main -Fo ${SPIRV_OUTPUT} ${SHADER_SOURCE}
+            DEPENDS ${SHADER_SOURCE}
+            COMMENT "Compiling SPIR-V (fragment): ${SHADER_NAME}"
             VERBATIM
         )
         list(APPEND SPIRV_OUTPUTS ${SPIRV_OUTPUT})
@@ -676,7 +692,7 @@ if(GLSLC)
 
     add_custom_target(spirv_shaders DEPENDS ${SPIRV_OUTPUTS})
 else()
-    message(WARNING "glslc not found, SPIR-V shaders will not be compiled")
+    message(WARNING "dxc not found, SPIR-V shaders will not be compiled")
 endif()
 
 add_executable(rwe src/main.cpp)
